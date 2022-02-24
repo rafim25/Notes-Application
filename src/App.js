@@ -24,7 +24,7 @@ function App() {
       ? folders.find((item) => item.id === folder)?.notes
       : [];
     setNotes(noteList);
-    setActiveNote(noteList[0].id);
+    setActiveNote(noteList[0]?.id);
   };
 
   const onAddFolder = (name) => {
@@ -35,6 +35,7 @@ function App() {
       notes: [],
     };
     setfolders([{ ...folderMock, name }, ...folders]);
+    setNotes([]);
     setActiveFolder(folderMock.id);
   };
 
@@ -67,8 +68,12 @@ function App() {
 
   const OnDeleteFolder = () => {
     const folder = folders.filter((item) => item.id !== activeFolder);
+    const activefol = folder[0];
     setfolders(folder);
-    setActiveFolder(folder[0].id);
+    setActiveFolder(activefol?.id || null);
+    console.log();
+    setNotes(activefol?.notes || []);
+    setActiveNote(activefol.notes[0].id);
   };
 
   const OnDeleteNotes = () => {
