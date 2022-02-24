@@ -9,12 +9,23 @@ function App() {
     localStorage.folders ? JSON.parse(localStorage.folders) : []
   );
 
+  const [notes, setNotes] = useState([]);
+
   const [activeFolder, setActiveFolder] = useState({});
   const [activeNote, setActiveNote] = useState({});
 
   useEffect(() => {
     localStorage.setItem("folders", JSON.stringify(folders));
   }, [folders]);
+
+  const onFolderClick = (folder) => {
+    setActiveFolder(folder);
+    let noteList = folders
+      ? folders.find((item) => item.id === folder)?.notes
+      : [];
+    setNotes(noteList);
+    setActiveNote(noteList[0].id);
+  };
 
   const onAddFolder = (name) => {
     const folderMock = {
@@ -49,6 +60,7 @@ function App() {
           }
         : folder
     );
+    setNotes(activeNotes);
     setActiveNote(updatedNote.id);
     setfolders(foldesList);
   };
@@ -64,11 +76,12 @@ function App() {
       .find((item) => item.id === activeFolder)
       ?.notes.filter((item) => item.id !== activeNote);
 
-    setfolders(
-      folders.map((item) =>
-        item.id === activeFolder ? { ...item, notes: notes } : item
-      )
+    const folderList = folders.map((item) =>
+      item.id === activeFolder ? { ...item, notes: notes } : item
     );
+
+    setfolders(folderList);
+    setNotes(folderList.find((item) => item.id === activeFolder)?.notes);
     setActiveNote(notes[0].id);
   };
 
@@ -80,13 +93,14 @@ function App() {
       lastModified: Date.now(),
     };
 
-    setfolders(
-      folders.map((folder) =>
-        folder.id === activeFolder
-          ? { ...folder, notes: [...folder.notes, note] }
-          : folder
-      )
+    let folderList = folders.map((folder) =>
+      folder.id === activeFolder
+        ? { ...folder, notes: [...folder.notes, note] }
+        : folder
     );
+
+    setfolders(folderList);
+    setNotes(folderList.find((item) => item.id === activeFolder)?.notes);
     setActiveNote(note.id);
   };
 
@@ -102,7 +116,7 @@ function App() {
         onAddItem={onAddFolder}
         items={folders}
         activeItem={activeFolder}
-        setActive={setActiveFolder}
+        setActive={onFolderClick}
         update={onUpdateFolder}
         sortKey={"lastModified"}
         onRemoveItem={OnDeleteFolder}
@@ -111,9 +125,7 @@ function App() {
       />
       <SideBar
         onAddItem={onAddNotes}
-        items={
-          folders ? folders.find((item) => item.id === activeFolder)?.notes : []
-        }
+        items={notes}
         activeItem={activeNote}
         setActive={setActiveNote}
         update={onUpdateNotes}
