@@ -3,6 +3,7 @@ import "./App.css";
 import NotesPreview from "./components/Tiles/NotesPreview";
 import uuid from "react-uuid";
 import SideBar from "./components/SideBar/SideBar";
+import { callService } from "./constants/const";
 
 function App() {
   const [folders, setfolders] = useState(
@@ -13,27 +14,24 @@ function App() {
   const [activeNote, setActiveNote] = useState({});
 
   useEffect(() => {
-    localStorage.setItem("folders", JSON.stringify(folders));
-  }, [folders]);
+    callService("folders", "GET", setfolders);
+  }, []);
 
   const onAddFolder = (name) => {
-    const folderMock = {
+    const newFolder = {
       id: uuid(),
       title: "",
       lastModified: Date.now(),
       notes: [],
     };
-    setfolders([{ ...folderMock, name }, ...folders]);
-    setActiveFolder(folderMock.id);
+    callService("folders/create", "POST", setfolders, newFolder);
   };
 
   const onUpdateFolder = (updatedfolder) => {
-    const foldesList = folders.map((folder) =>
-      folder.id === activeFolder
-        ? { ...folder, title: updatedfolder.title }
-        : folder
-    );
-    setfolders(foldesList);
+    callService(`folders/update?fid=${updatedfolder.id}`, "POST", setfolders, {
+      ...updatedfolder,
+    });
+    setActiveFolder(updatedfolder);
   };
 
   const onUpdateNotes = (updatedNote) => {
@@ -54,9 +52,7 @@ function App() {
   };
 
   const OnDeleteFolder = () => {
-    const folder = folders.filter((item) => item.id !== activeFolder);
-    setfolders(folder);
-    setActiveFolder(folder[0].id);
+    callService(`folders/delete?`, "DELETE", setfolders, { id: activeFolder });
   };
 
   const OnDeleteNotes = () => {
@@ -69,25 +65,23 @@ function App() {
         item.id === activeFolder ? { ...item, notes: notes } : item
       )
     );
+    callService("notes", "DELETE", setfolders, {
+      fid: activeFolder,
+      nid: activeNote,
+    });
     setActiveNote(notes[0].id);
   };
 
   const onAddNotes = () => {
-    const note = {
+    const newNote = {
       id: uuid(),
       title: "",
       body: "",
       lastModified: Date.now(),
+      folderId: activeFolder,
     };
-
-    setfolders(
-      folders.map((folder) =>
-        folder.id === activeFolder
-          ? { ...folder, notes: [...folder.notes, note] }
-          : folder
-      )
-    );
-    setActiveNote(note.id);
+    callService("notes", "POST", setfolders, { fid: activeFolder, newNote });
+    setActiveNote(newNote.id);
   };
 
   const getActiveNote = () => {
